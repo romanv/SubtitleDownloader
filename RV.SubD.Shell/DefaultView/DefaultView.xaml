@@ -1,0 +1,215 @@
+﻿<UserControl x:Class="RV.SubD.Shell.DefaultView.DefaultView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="clr-namespace:RV.SubD.Shell.Core"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:data="clr-namespace:RV.SubD.Core.Data;assembly=RV.SubD.Core"
+             xmlns:defaultView="clr-namespace:RV.SubD.Shell.DefaultView"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             Name="Default"
+             d:DataContext="{d:DesignInstance defaultView:DefaultViewViewModel,
+                                              d:IsDesignTimeCreatable=False}"
+             d:DesignHeight="383"
+             d:DesignWidth="904"
+             mc:Ignorable="d">
+    <Grid Background="#252525"
+          FocusVisualStyle="{x:Null}">
+        <Grid.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ListBox.xaml" />
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="51" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Border Margin="4,0,4,0"
+                BorderBrush="#b9b9b9"
+                BorderThickness="0,0,0,3">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="#bebebe"
+                               FontSize="14"
+                               FontWeight="DemiBold"
+                               Text="Title" />
+                    <TextBox Width="196"
+                             Margin="8,0,0,0"
+                             VerticalAlignment="Center"
+                             Foreground="{StaticResource MaterialDesignDarkForeground}"
+                             FontSize="14"
+                             Text="{Binding Title.Title}" />
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="#bebebe"
+                               FontSize="14"
+                               FontWeight="DemiBold"
+                               Text="Season" />
+                    <TextBox Width="48"
+                             Margin="8,0,0,0"
+                             VerticalAlignment="Center"
+                             Foreground="{StaticResource MaterialDesignDarkForeground}"
+                             FontSize="14"
+                             Text="{Binding Title.Season}" />
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="#bebebe"
+                               FontSize="14"
+                               FontWeight="DemiBold"
+                               Text="Episode" />
+                    <TextBox Width="48"
+                             Margin="8,0,0,0"
+                             VerticalAlignment="Center"
+                             Foreground="{StaticResource MaterialDesignDarkForeground}"
+                             FontSize="14"
+                             Text="{Binding Title.Episodes, Converter={core:IntArrayToStringConverter}}" />
+                </StackPanel>
+                <Button Name="SearchButton"
+                        Width="97"
+                        Margin="0,0,8,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CmdSearchSubtitle}"
+                        Content="Search"
+                        Visibility="{Binding SearchInProgress, Converter={core:BoolToVisibility IsInverted=True}}"/>
+                <Button Name="CancelButton"
+                        Width="97"
+                        Margin="0,0,8,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CmdCancelSearch}"
+                        Content="Cancel"
+                        IsEnabled="{Binding CancelButtonEnabled}"
+                        Style="{DynamicResource MaterialDesignRaisedAccentButton}"
+                        Visibility="{Binding SearchInProgress, Converter={core:BoolToVisibility}}"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1"
+                Background="#252525">
+            <Grid Margin="4,0,4,4">
+                <ListBox ItemsSource="{Binding DownloadableSubtitles}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem"
+                               BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type defaultView:DownloadableSubtitleViewModel}">
+                            <Grid HorizontalAlignment="Stretch"
+                                  Background="#4f4f4f">
+                                <Grid.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White" />
+                                    </Style>
+                                </Grid.Resources>
+                                <Border BorderBrush="#b9b9b9"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid Margin="16,8,8,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="164" />
+                                            <ColumnDefinition />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Margin="0,0,64,0"
+                                                   VerticalAlignment="Bottom"
+                                                   FontSize="14"
+                                                   FontWeight="DemiBold"
+                                                   Text="{Binding Subtitle.SiteTitle}" />
+                                        <TextBlock Grid.Row="1"
+                                                   Grid.Column="0"
+                                                   Margin="0,4,0,0"
+                                                   Text="{Binding Subtitle.Version}" />
+                                        <StackPanel Name="LanguagePanel"
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Margin="0,0,0,1"
+                                                    VerticalAlignment="Bottom"
+                                                    Orientation="Horizontal">
+                                            <TextBlock Foreground="#bbbbbb"
+                                                       Text="Language: " />
+                                            <TextBlock Text="{Binding Subtitle.Language}" />
+                                        </StackPanel>
+                                        <StackPanel Name="Downloads"
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    Margin="0,4,0,0"
+                                                    Orientation="Horizontal">
+                                            <TextBlock Foreground="#bbbbbb"
+                                                       Text="Downloads: " />
+                                            <TextBlock Text="{Binding Subtitle.Downloads}" />
+                                        </StackPanel>
+                                        <StackPanel Name="Publisher"
+                                                    Grid.Row="0"
+                                                    Grid.Column="2"
+                                                    Margin="0,0,0,1"
+                                                    VerticalAlignment="Bottom"
+                                                    Orientation="Horizontal">
+                                            <TextBlock Foreground="#bbbbbb"
+                                                       Text="Published by: " />
+                                            <TextBlock Text="{Binding Subtitle.Publisher}" />
+                                        </StackPanel>
+                                        <StackPanel Name="PublishDate"
+                                                    Grid.Row="1"
+                                                    Grid.Column="2"
+                                                    Margin="0,4,0,0"
+                                                    Orientation="Horizontal">
+                                            <TextBlock Foreground="#bbbbbb"
+                                                       Text="On: " />
+                                            <TextBlock Text="{Binding Subtitle.SubmittedOn, StringFormat=dd.MM.yyyy}" />
+                                        </StackPanel>
+                                        <ProgressBar Width="32"
+                                                     Height="32"
+                                                     Margin="0,0,16,0"
+                                                     Grid.Row="0"
+                                                     Grid.RowSpan="2"
+                                                     Grid.Column="3"
+                                                     Style="{DynamicResource MaterialDesignCircularProgressBar}"
+                                                     Foreground="{StaticResource SecondaryAccentForegroundBrush}"
+                                                     IsIndeterminate="True"
+                                                     Visibility="{Binding IsDownloading, Converter={core:BoolToVisibility}}" />
+                                        <Button Grid.Row="0"
+                                                Grid.RowSpan="2"
+                                                Grid.Column="4"
+                                                Width="97"
+                                                Style="{DynamicResource MaterialDesignRaisedLightButton}"
+                                                Command="{Binding CmdDownload}"
+                                                Content="Download"
+                                                Visibility="{Binding IsDownloading, Converter={core:BoolToVisibility IsInverted=True}}" />
+                                        <Button Grid.Row="0"
+                                                Grid.RowSpan="2"
+                                                Grid.Column="4"
+                                                Width="97"
+                                                Style="{DynamicResource MaterialDesignRaisedAccentButton}"
+                                                Command="{Binding CmdCancelDownload}"
+                                                Content="Cancel"
+                                                Visibility="{Binding IsDownloading, Converter={core:BoolToVisibility}}"
+                                                IsEnabled="{Binding IsCancelButtonEnabled}"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Border Background="Black"
+                        Margin="0,4,0,0"
+                        Opacity="0.2"
+                        Visibility="{Binding SearchInProgress, Converter={core:BoolToVisibility}}" />
+                <ProgressBar Width="64"
+                             Height="64"
+                             Style="{DynamicResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True"
+                             Visibility="{Binding SearchInProgress, Converter={core:BoolToVisibility}}"
+                             Value="0" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
