@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Net.Cache;
     using System.Net.Http;
     using System.Net.Http.Headers;
@@ -17,7 +18,7 @@
 
     internal class Addic7edPageDownloader : IPageDownloader
     {
-        private const string BaseHost = "http://www.addic7ed.com/";
+        private const string BaseHost = "www.addic7ed.com";
 
         public async Task<Tuple<Uri, string>> SearchAndGetSubtitlesListPageAsync(TitleObject to, CancellationToken cancelToken)
         {
@@ -49,33 +50,78 @@
             return newResponse;
         }
 
-        private async Task<Tuple<Uri, string>> SearchAndGetSubtitlesPageAsync(TitleObject to, CancellationToken cancelToken)
+        private async Task<Tuple<bool, Cookie>> GetSessionCookie()
         {
-            var searchString = new StringBuilder();
-
-            searchString.Append(BaseHost + "srch.php?search=");
-            searchString.AppendFormat(HttpUtility.UrlEncode(to.Title));
-            searchString.Append(HttpUtility.UrlEncode($" {to.Season:00}x{to.Episodes.First():00}"));
-            searchString.Append("&Submit=Search");
-
-            // trying to avoid usage of system cache
-            var handler = new WebRequestHandler { CachePolicy = new HttpRequestCachePolicy(DateTime.MinValue) };
+            var handler = new HttpClientHandler();
+            var cookieContainer = new CookieContainer();
+            handler.CookieContainer = cookieContainer;
 
             using (var client = new HttpClient(handler))
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
-                // trying to avoid usage of system cache
-                client.DefaultRequestHeaders.IfModifiedSince = new DateTimeOffset(DateTime.Now);
-                client.DefaultRequestHeaders.Add(
-                    "User-Agent",
-                    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:43.0) Gecko/20100101 Firefox/43.0");
-                var cacheControlHeader = new CacheControlHeaderValue { NoCache = true };
-                client.DefaultRequestHeaders.CacheControl = cacheControlHeader;
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+                client.DefaultRequestHeaders.Add("Host", BaseHost);
+
+                var uri = new Uri($"https://{BaseHost}");
+
+                using (var response = await client.GetAsync(uri))
+                {
+                    var cookies = cookieContainer.GetCookies(uri).Cast<Cookie>().ToList();
+
+                    if (cookies.Any())
+                    {
+                        var sessionCookie = cookies.FirstOrDefault(c => c.Name == "PHPSESSID");
+
+                        if (sessionCookie != null)
+                        {
+                            return new Tuple<bool, Cookie>(true, sessionCookie);
+                        }
+                    }
+
+                    Logger.LogLine($"GetSessionCookie - no session cookie was set by the site. Status is {response.StatusCode}");
+                }
+            }
+
+            return new Tuple<bool, Cookie>(false, new Cookie());
+        }
+
+        private async Task<Tuple<Uri, string>> SearchAndGetSubtitlesPageAsync(TitleObject to, CancellationToken cancelToken)
+        {
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+
+            var (gotSessionCookie, cookie) = await GetSessionCookie();
+           
+            if (!gotSessionCookie)
+            {
+                return new Tuple<Uri, string>(new Uri(string.Empty), string.Empty);
+            }
+
+            handler.CookieContainer = new CookieContainer();
+            handler.CookieContainer.Add(cookie);
+
+            var searchString = new StringBuilder();
+
+            searchString.Append("https://" + BaseHost + "/search.php?search=");
+            searchString.AppendFormat(HttpUtility.UrlEncode(to.Title));
+            searchString.Append(HttpUtility.UrlEncode($" {to.Season:00}x{to.Episodes.First():00}"));
+            searchString.Append("&Submit=Search");
+
+            using (var client = new HttpClient(handler))
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("Host", BaseHost);
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0");
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+                client.DefaultRequestHeaders.Add("Connection", "keep-alive");
 
                 using (var response = await client.GetAsync(searchString.ToString(), cancelToken))
                 {
-                    response.Headers.CacheControl = cacheControlHeader;
-
                     using (var content = response.Content)
                     {
                         var data = await content.ReadAsStringAsync();
@@ -86,7 +132,6 @@
                             return new Tuple<Uri, string>(uri, data);
                         }
 
-                        // in case of error
                         Logger.LogLine($"SearchAndGetSubtitlesPageAsync - empty data response. Status is {response.StatusCode}");
                     }
                 }
@@ -104,11 +149,8 @@
                 client.Timeout = TimeSpan.FromSeconds(30);
                 client.DefaultRequestHeaders.Host = "www.addic7ed.com";
                 client.DefaultRequestHeaders.IfModifiedSince = new DateTimeOffset(DateTime.Now);
-                client.DefaultRequestHeaders.Add(
-                    "User-Agent",
-                    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:43.0) Gecko/20100101 Firefox/43.0");
-                var cacheControlHeader = new CacheControlHeaderValue { NoCache = true };
-                client.DefaultRequestHeaders.CacheControl = cacheControlHeader;
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0");
+                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
 
                 using (var response = await client.GetAsync(BaseHost + url))
                 {
