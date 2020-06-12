@@ -50,7 +50,7 @@
             return newResponse;
         }
 
-        private async Task<Tuple<bool, Cookie>> GetSessionCookie()
+        private async Task<Tuple<bool, Cookie>> GetSessionCookie(CancellationToken cancelToken)
         {
             var handler = new HttpClientHandler();
             var cookieContainer = new CookieContainer();
@@ -65,7 +65,7 @@
 
                 var uri = new Uri($"https://{BaseHost}");
 
-                using (var response = await client.GetAsync(uri))
+                using (var response = await client.GetAsync(uri, cancelToken))
                 {
                     var cookies = cookieContainer.GetCookies(uri).Cast<Cookie>().ToList();
 
@@ -93,7 +93,7 @@
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-            var (gotSessionCookie, cookie) = await GetSessionCookie();
+            var (gotSessionCookie, cookie) = await GetSessionCookie(cancelToken);
            
             if (!gotSessionCookie)
             {
