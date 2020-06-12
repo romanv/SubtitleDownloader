@@ -134,6 +134,11 @@
             }
             catch (OperationCanceledException)
             {
+                var cancelledByUser = !CancelButtonEnabled;
+                if (!cancelledByUser)
+                {
+                    Logger.LogLine("Network request was timed out");
+                }
                 DownloadableSubtitles = new ObservableCollection<DownloadableSubtitleViewModel>();
             }
             catch (Exception ex)
