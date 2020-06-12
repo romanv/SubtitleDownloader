@@ -132,8 +132,8 @@
                 using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(requestUrl, UriKind.Absolute)))
                 {
                     request.Headers.Referrer = Subtitle.ReferrerUri;
-                    var sendTask = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _tokenSource.Token);
-                    var response = sendTask.Result.EnsureSuccessStatusCode();
+                    var sendResult = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _tokenSource.Token);
+                    var response = sendResult.EnsureSuccessStatusCode();
                     var httpStream = await response.Content.ReadAsStreamAsync();
 
                     var subFileName = GetSubFileName(Subtitle.OriginalFilePath);
