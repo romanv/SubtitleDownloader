@@ -136,7 +136,7 @@
 
         private static string ParseDownloadUrl(HtmlNode n, IList<string> languages)
         {
-            var downloadButtons = n.SelectNodes(".//a[@class='buttonDownload']");
+            var downloadButtons = n.SelectNodes(".//a[@class='face-button']");
 
             // select last (newest) link, where corresponding language in neighbor <td> is one of the supported languages
             var newestSupportedLanguageUrlLink =

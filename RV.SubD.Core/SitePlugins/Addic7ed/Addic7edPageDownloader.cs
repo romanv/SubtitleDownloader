@@ -152,7 +152,9 @@
                 client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0");
                 client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
 
-                using (var response = await client.GetAsync(BaseHost + url))
+                var subPageUrl = "https://" + BaseHost + "/" + url;
+
+                using (var response = await client.GetAsync(subPageUrl))
                 {
                     using (var content = response.Content)
                     {
